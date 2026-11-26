@@ -1,0 +1,55 @@
+# 睿洱世界层的数值。
+# 复制到 ~/.rillbuddy/balance.yaml 修改即可覆盖，只需写要改的键。
+
+fishing:
+  start_after_s: 5          # 会话干活多久后开始算这一轮（做完能得一颗糖）
+  min_turn_s: 5             # 短于这个时长的回合不给糖
+  # 按本轮时长（分钟）抽稀有度：普通 / 稀有 / 史诗 / 传说（百分比）
+  odds:
+    - { under_min: 1,  p: [90, 10, 0, 0] }
+    - { under_min: 5,  p: [60, 30, 10, 0] }
+    - { under_min: 30, p: [40, 35, 20, 5] }
+    - { under_min: 0,  p: [25, 35, 28, 12] }   # under_min 0 = 其余（≥ 30 分钟）
+
+bugs:
+  per_tool_fail: 1          # 每次工具失败掉 1 只虫
+  per_turn_error: 3         # 回合以出错结束时掉 3 只
+  max: 20                   # 屏幕上最多 20 只
+  ttl_min: 10               # 超过 10 分钟没拍的虫钻进地缝消失
+  boss_hp: 10               # Boss 要点 10 下
+
+quips:
+  enabled: true
+  min_s: 90                 # 干活时每 90–180 秒随机吐槽一句（features.chatter: lively 的节奏；normal 间隔 ×2.5，quiet 不说）
+  max_s: 180
+  no_repeat_min: 30         # 同一句 30 分钟内不重复
+  # 变量：{file} 最近操作的文件，{n} 本会话改这个文件的次数，{tool} 最近用的工具，{project} 项目名。
+  # 用到的变量没有值时这句会被跳过。
+  lines:
+    - "又改 {file} 了，第 {n} 次"
+    - "{file} 今天被翻了好多遍"
+    - "在 {tool} 了，它是不是迷路了"
+    - "{project} 这个项目好像很难"
+    - "它在跑。我在数糖纸。"
+    - "这一轮做完，罐里该多一颗了。"
+    - "这行你盯了很久了。"
+    - "今天的键盘声很整齐。"
+    - "它又卡住了，转圈那种。"
+  # English lines (used when the UI language is English; same variables).
+  lines_en:
+    - "{file} again? That's edit #{n}"
+    - "{file} is getting a real workout today"
+    - "Still on {tool}... is it lost?"
+    - "{project} looks like a tough one"
+    - "It's running. I'm counting wrappers."
+    - "When this turn is done, there should be one more in the jar."
+    - "You've been staring at that line a while."
+    - "The keyboard sounds even today."
+    - "It's stuck again. The spinning kind."
+
+interactions:
+  per_pet_hour: 6           # 每只宠物每小时最多 6 次主动互动（lively；normal 取一半，quiet 为 1）
+  tick_ms: 500
+
+work:
+  off_time: "18:00"         # 下班时间：到点弹每日报告

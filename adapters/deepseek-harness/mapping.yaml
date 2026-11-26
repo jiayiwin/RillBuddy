@@ -1,0 +1,21 @@
+# DeepSeek Harness -> Rill unified event (protocol v1).
+# The native read-only DSH observer sends lifecycle and tool metadata directly
+# to the emitter, without running an agent shell or copying prompt contents.
+
+source: deepseek-harness
+session: session_id
+project: cwd
+sub_when: agent_id
+file_keys: [file_path, notebook_path, path]
+patch_tools: [apply_patch]
+
+read_commands: [cat, type, get-content, gc, head, tail, less, more, rg, grep, select-string, sls, findstr, ls, dir, get-childitem, gci, tree, find, fd, wc, git-log, git-show, git-diff, git-status]
+
+events:
+  SessionStart:      { event: session.start }
+  SessionEnd:        { event: session.end }
+  UserPromptSubmit:  { event: turn.start }
+  PreToolUse:        { event: tool.start, tool: true }
+  PostToolUse:       { event: tool.end, tool: true, ok: true }
+  PostToolUseFailure: { event: tool.end, tool: true, ok_value: false }
+  Stop:              { event: turn.done, result: ok, result_key: stop_reason, results: { ok: ok, error: error, aborted: aborted } }

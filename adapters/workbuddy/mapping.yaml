@@ -1,0 +1,26 @@
+# WorkBuddy / CodeBuddy hook -> Rill unified event (protocol v1).
+# WorkBuddy exposes the Claude-Code-compatible hook payload on
+# ~/.workbuddy/settings.json. Only tool name, file basename and a boolean
+# read hint are retained by rillbuddy-emit.
+
+source: workbuddy
+session: session_id
+project: cwd
+sub_when: agent_id
+file_keys: [file_path, notebook_path, path]
+
+read_commands: [cat, type, get-content, gc, head, tail, less, more, rg, grep, select-string, sls, findstr, ls, dir, get-childitem, gci, tree, find, fd, wc, git-log, git-show, git-diff, git-status]
+
+events:
+  SessionStart:          { event: session.start }
+  SessionEnd:            { event: session.end }
+  UserPromptSubmit:      { event: turn.start }
+  PreToolUse:            { event: tool.start, tool: true }
+  PostToolUse:           { event: tool.end, tool: true, ok: true }
+  PostToolUseFailure:    { event: tool.end, tool: true, ok_value: false, interrupt_key: is_interrupt }
+  PermissionRequest:     { event: attention, tool: true, kind: permission }
+  Notification:          { event: attention, kind: input }
+  Stop:                  { event: turn.done, result: ok, result_key: stop_reason, results: { completed: ok, end_turn: ok, aborted: aborted, error: error } }
+  StopFailure:           { event: turn.done, result: error }
+  SubagentStart:         { event: turn.start, sub: true }
+  SubagentStop:          { event: turn.done, result: ok, sub: true }

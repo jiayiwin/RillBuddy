@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>收工与回来 · 预览</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #1d1a26; }
+      body { display: grid; place-items: center; font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif; }
+      #stage { position: relative; width: 1280px; height: 720px; overflow: hidden; border-radius: 10px; }
+      canvas { display: block; }
+      #cap { position: absolute; left: 24px; top: 20px; max-width: 560px; font: 600 15px "Microsoft YaHei UI", sans-serif; color: #4a3f55; background: rgba(255,250,242,.9); padding: 9px 14px 10px; border-radius: 12px; box-shadow: 0 2px 10px rgba(30,20,50,.22); }
+      #cap small { display: block; font-weight: 400; font-size: 12.5px; line-height: 1.6; color: #6f6070; margin-top: 3px; }
+      #nav { position: absolute; left: 24px; bottom: 56px; display: flex; flex-wrap: wrap; gap: 6px; max-width: 520px; }
+      #nav button { font: 600 12px "Microsoft YaHei UI", sans-serif; color: #5b4a57; background: rgba(255,250,242,.82); border: 1px solid rgba(91,74,87,.18); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
+      #nav button.on { background: #5b4a57; color: #fffaf2; }
+      #nav .gap { width: 100%; height: 0; }
+    </style>
+  </head>
+  <body>
+    <!-- A pretend desktop, for seeing 收工 / 接上 / 回来一眼看懂 before they are built. Not part of the app. -->
+    <div id="stage">
+      <canvas id="desk"></canvas>
+      <div id="cap"></div>
+      <div id="nav"></div>
+    </div>
+    <script type="module" src="/src/evening-preview.ts"></script>
+  </body>
+</html>

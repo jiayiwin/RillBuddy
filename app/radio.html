@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>电台 · 睿洱</title>
+    <style>
+      /* Colours come from the pet's skin (src/skin.ts); these are 紫梦's, until the skin is on. */
+      :root { --accent: #7a5fc0; --accent-deep: #6a50b0; --accent-soft: #ece4ff; --accent-text: #5b4696; --accent-off: #cfc3e6; --hover: #f5eefc; --room: #f3ecf9; --room-night: #ebe3f4; --room-line: #e3d8ea; --cushion: #e0d4ff; --stage: #e9eff8; --stage-ink: #5d6c85; --stage-line: #cfd9e8; --shade: 110, 88, 140; --motif-fill: #f3e9cf; --motif-line: #cdbdba; }
+      html:not([data-skin]) body { visibility: hidden; }
+      /* The radio: the pet listens with you. Its paper, its line, its plum;
+         the card it sits on is the pale blue of a quiet afternoon. */
+      :root {
+        --ground: #faf6f0; --paper: #fffaf2; --ink: #5b4a57; --ink-2: #6d5d6a; --muted: #776775; --line: #d9cbc8; --rule: #efe6e2; --well: #f0e9e4;
+        --alert-ink: #b3432e;
+        --ui: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+        --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+        color-scheme: light;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: var(--ground); }
+      body { display: flex; flex-direction: column; gap: 14px; padding: 20px; font-family: var(--ui); color: var(--ink); -webkit-font-smoothing: antialiased; user-select: none; }
+      button { font: inherit; color: inherit; cursor: pointer; }
+
+      /* ── now playing ── */
+      .now { flex: none; display: flex; flex-direction: column; gap: 14px; padding: 16px; border-radius: 22px; background: var(--stage); }
+      .np { display: flex; align-items: center; gap: 12px; }
+      .np canvas { flex: none; display: block; width: 104px; height: 88px; }
+      .np .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+      .np .state { font-size: 12px; font-weight: 700; color: var(--stage-ink); }
+      .now.error .np .state { color: var(--alert-ink); }
+      .np .name { font-size: 20px; font-weight: 800; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+      .np .meta { font-size: 12px; color: var(--stage-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .line { align-self: flex-start; max-width: 100%; padding: 7px 14px; border-radius: 14px; background: var(--paper); border: 1px solid var(--line); font-size: 13px; font-weight: 700; transition: opacity 0.2s; }
+      .line.swap { opacity: 0; }
+      .ctl { display: flex; align-items: center; gap: 12px; }
+      .big { flex: none; width: 52px; height: 52px; border: 0; border-radius: 50%; background: var(--accent); display: grid; place-items: center; transition: background 0.15s; }
+      .big:hover { background: var(--accent-deep); }
+      .big:disabled { background: var(--accent-off); cursor: default; }
+      .big svg { width: 20px; height: 20px; fill: #fff; }
+      .now.loading .big svg { animation: pulse 1s ease-in-out infinite; }
+      @keyframes pulse { 50% { opacity: 0.45; } }
+      .vol { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
+      .vol svg { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--stage-ink); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .vol input { flex: 1; min-width: 0; height: 18px; margin: 0; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer; }
+      .vol input::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--v, 70%), var(--stage-line) var(--v, 70%)); }
+      .vol input::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -5px; border-radius: 50%; background: var(--paper); border: 1.5px solid var(--accent); }
+      .ghost { flex: none; width: 40px; height: 40px; border: 0; border-radius: 50%; background: transparent; display: grid; place-items: center; transition: background 0.15s; }
+      .ghost:hover { background: rgba(255, 250, 242, 0.8); }
+      .ghost svg { width: 20px; height: 20px; fill: none; stroke: var(--stage-ink); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+      .ghost.on svg { fill: var(--accent); stroke: var(--accent); }
+
+      /* ── which shelf ── */
+      .tabs { flex: none; align-self: flex-start; max-width: 100%; display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--well); }
+      .tabs button { min-height: 36px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; font-size: 13px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
+      .tabs button:hover { color: var(--ink); }
+      .tabs button.on { background: var(--paper); box-shadow: 0 1px 4px rgba(var(--shade), 0.2); font-weight: 800; color: var(--ink); }
+
+      /* ── the stations ── */
+      .shelf { flex: 1; min-height: 0; display: flex; flex-direction: column; border-radius: 22px; background: var(--paper); border: 1px solid var(--line); overflow: hidden; }
+      .search { flex: none; display: flex; align-items: center; gap: 8px; margin: 10px 12px 4px; padding: 0 12px; min-height: 36px; border-radius: 999px; background: var(--well); }
+      .search svg { flex: none; width: 16px; height: 16px; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; }
+      .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 13px; color: var(--ink); }
+      .search input::placeholder { color: var(--muted); }
+      .search:focus-within { box-shadow: 0 0 0 2px var(--accent-soft); }
+      .list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; padding: 0 8px 6px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+      .sub { flex: none; display: flex; align-items: center; gap: 8px; padding: 10px 10px 4px; font-size: 12px; font-weight: 700; color: var(--muted); }
+      .sub button { margin-left: auto; min-height: 28px; padding: 0 10px; border: 0; border-radius: 999px; background: var(--well); font-size: 12px; font-weight: 700; color: var(--ink-2); }
+      .sub button:hover { background: var(--accent-soft); }
+      .st { flex: none; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 0 10px; border: 0; border-bottom: 1px solid var(--rule); background: transparent; text-align: left; }
+      .st:hover { background: var(--hover); border-radius: 14px; border-bottom-color: transparent; }
+      .st.cur { background: var(--accent-soft); border-radius: 14px; border-bottom-color: transparent; }
+      .st .eq { flex: none; display: flex; align-items: flex-end; gap: 3px; width: 18px; height: 16px; }
+      .st .eq i { width: 4px; border-radius: 2px; background: var(--accent); height: 4px; }
+      .st.on .eq i { animation: eq 0.9s ease-in-out infinite; }
+      .st.on .eq i:nth-child(1) { animation-delay: -0.2s; } .st.on .eq i:nth-child(2) { animation-delay: -0.5s; } .st.on .eq i:nth-child(3) { animation-delay: -0.8s; }
+      .st.cur:not(.on) .eq i:nth-child(1) { height: 9px; } .st.cur:not(.on) .eq i:nth-child(2) { height: 16px; } .st.cur:not(.on) .eq i:nth-child(3) { height: 12px; }
+      .st:not(.cur) .eq i { display: none; }
+      @keyframes eq { 0%, 100% { height: 5px; } 50% { height: 16px; } }
+      .st .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+      .st .tx b { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .st.cur .tx b { font-weight: 800; }
+      .st .tx small { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .st.cur .tx small { color: var(--ink-2); }
+      .st .heart { flex: none; width: 14px; height: 14px; fill: var(--accent); }
+      .countries { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px 2px; }
+      .country { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; border: 0; border-radius: 12px; background: transparent; text-align: left; font-size: 13px; font-weight: 700; }
+      .country:hover { background: var(--hover); }
+      .country .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .country small { flex: none; font-size: 12px; font-weight: 500; color: var(--muted); }
+      .empty { padding: 18px 12px; font-size: 14px; line-height: 1.6; color: var(--muted); }
+      .foot { flex: none; margin: -6px 4px -8px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+      /* ── where it sits, and what was on before ── */
+      .seat { position: relative; flex: none; }
+      .seat canvas { display: block; width: 104px; height: 88px; }
+      .seat .cushion, .seat .notes { display: none; }
+      .seat .cushion { position: absolute; left: 50%; bottom: 4px; width: 170px; height: 26px; margin-left: -85px; border-radius: 50%; background: var(--cushion); opacity: 0.85; }
+      .seat canvas { position: relative; }
+      /* While a station plays, a few notes drift up beside it. */
+      .notes { position: absolute; inset: 0; pointer-events: none; }
+      .notes i { position: absolute; bottom: 46px; font-style: normal; font-size: 15px; font-weight: 800; color: var(--accent); opacity: 0; }
+      .notes i:nth-child(1) { left: 22%; } .notes i:nth-child(2) { left: 72%; font-size: 12px; } .notes i:nth-child(3) { left: 80%; }
+      .now.playing .notes i { animation: drift 3.6s ease-out infinite; }
+      .now.playing .notes i:nth-child(2) { animation-delay: 1.2s; } .now.playing .notes i:nth-child(3) { animation-delay: 2.4s; }
+      @keyframes drift { 0% { opacity: 0; transform: translate(0, 0) rotate(-8deg); } 15% { opacity: 0.85; } 100% { opacity: 0; transform: translate(10px, -78px) rotate(10deg); } }
+      .recent { display: none; flex-direction: column; gap: 2px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--stage-line); min-height: 0; overflow: hidden; }
+      .recent h3 { margin: 0 4px 4px; font-size: 12px; font-weight: 700; color: var(--stage-ink); }
+      .recent button { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 0 10px; border: 0; border-radius: 12px; background: transparent; text-align: left; }
+      .recent button:hover { background: rgba(255, 250, 242, 0.75); }
+      .recent .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-off); }
+      .recent .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+      .recent b { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .recent small { font-size: 11px; color: var(--stage-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .recent .when { flex: none; font-size: 11px; color: var(--stage-ink); }
+      .recent .none { margin: 0 4px; font-size: 12px; line-height: 1.6; color: var(--stage-ink); }
+      /* With room to spare (as a tab): what is on at the left, the shelves beside it. */
+      @media (min-width: 760px) {
+        body { display: grid; grid-template-columns: 330px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; column-gap: 16px; }
+        .now { grid-column: 1; grid-row: 1 / span 2; align-self: stretch; min-height: 0; }
+        .np { flex-direction: column; align-items: stretch; }
+        .seat { display: flex; justify-content: center; }
+        .seat canvas { width: 196px; height: 166px; }
+        .seat .cushion, .seat .notes { display: block; }
+        .recent { display: flex; }
+        .tabs { grid-column: 2; grid-row: 1; }
+        .shelf { grid-column: 2; grid-row: 2; }
+        .foot { grid-column: 1 / -1; grid-row: 3; }
+      }
+      @media (prefers-reduced-motion: reduce) { .st.on .eq i, .now.loading .big svg { animation: none; } }
+    </style>
+  </head>
+  <body>
+    <header class="now" id="player">
+      <div class="np">
+        <div class="seat" aria-hidden="true"><div class="cushion"></div><canvas id="rpet"></canvas><div class="notes"><i>♪</i><i>♫</i><i>♪</i></div></div>
+        <div class="txt">
+          <span class="state" id="status"></span>
+          <span class="name" id="name" data-en="Pick a station">挑一个电台</span>
+          <span class="meta" id="meta" data-en="Stations from all over the world, and real 相声">全世界的电台，还有真正的相声</span>
+        </div>
+      </div>
+      <div class="line" id="line"></div>
+      <div class="ctl">
+        <button class="big" id="play" type="button" title="播放 / 暂停" data-en-title="Play / pause"></button>
+        <label class="vol"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3.500l4.500 3.500v-11L7.500 10z"/><path d="M16 9.500a3.500 3.500 0 0 1 0 5"/></svg><input type="range" id="vol" min="0" max="100" value="70" aria-label="音量" /></label>
+        <button class="ghost" id="fav" type="button" title="收藏" data-en-title="Favorite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.300-7-9.500A4 4 0 0 1 12 8a4 4 0 0 1 7 2.500C19 15.700 12 20 12 20z"/></svg></button>
+        <button class="ghost" id="roam" type="button" title="随机去一个地方的电台" data-en-title="Jump to a random station somewhere in the world"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 4h4v4M4 19 20 4M20 16v4h-4M14.500 14.500 20 20M4 5l5 5"/></svg></button>
+      </div>
+      <section class="recent" id="recent"></section>
+    </header>
+    <nav class="tabs" id="tabs">
+      <button type="button" data-tab="often" data-en="Regulars">常听的</button>
+      <button type="button" data-tab="up" data-en="Upbeat">提神的</button>
+      <button type="button" data-tab="calm" data-en="Quiet">安静的</button>
+      <button type="button" data-tab="xs" data-en="Crosstalk">相声</button>
+      <button type="button" data-tab="world" data-en="World">世界</button>
+    </nav>
+    <div class="shelf">
+      <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.500-3.500"/></svg><input id="q" placeholder="搜电台名字" data-en-placeholder="Search stations" /></label>
+      <div class="list" id="list"></div>
+    </div>
+    <div class="foot" data-en="Station directory: Radio Browser (radio-browser.info). Streams play straight from each station.">电台目录来自 Radio Browser（radio-browser.info），声音直接来自各电台。</div>
+    <script src="/embed.js"></script>
+    <script type="module" src="/src/radio.ts"></script>
+  </body>
+</html>

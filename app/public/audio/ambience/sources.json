@@ -1,0 +1,38 @@
+[
+  {
+    "name": "rain",
+    "title": "long_easy_rain_08",
+    "author": "joedeshon",
+    "source": "https://freesound.org/people/joedeshon/sounds/430765/",
+    "license": "CC0-1.0",
+    "start_s": 8,
+    "source_length_s": 72,
+    "crossfade_s": 4,
+    "loudness_lufs": -20,
+    "sha256": "fff37ee9ea079c626400379e942a33f34e52146fddd98955b20e088c66566a83"
+  },
+  {
+    "name": "wind",
+    "title": "breeze",
+    "author": "keweldog",
+    "source": "https://freesound.org/people/keweldog/sounds/181801/",
+    "license": "CC0-1.0",
+    "start_s": 3,
+    "source_length_s": 56,
+    "crossfade_s": 4,
+    "loudness_lufs": -20,
+    "sha256": "b11e53f29559e50a888284994b8d3c4c207027717bd7b9ff73d7775ecfa715a2"
+  },
+  {
+    "name": "night",
+    "title": "Crickets",
+    "author": "hopperphil",
+    "source": "https://freesound.org/people/hopperphil/sounds/685411/",
+    "license": "CC0-1.0",
+    "start_s": 8,
+    "source_length_s": 72,
+    "crossfade_s": 4,
+    "loudness_lufs": -24,
+    "sha256": "b3bd0f70c9d55a1a9b5bba5c821455b5eb829a2ec2bd881c6067ac605bf5d9f3"
+  }
+]

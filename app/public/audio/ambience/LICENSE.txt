@@ -1,0 +1,21 @@
+Natural ambience recordings
+
+rain.mp3: "long_easy_rain_08" by joedeshon
+https://freesound.org/people/joedeshon/sounds/430765/
+
+wind.mp3: "breeze" by keweldog (breeze through the pines)
+https://freesound.org/people/keweldog/sounds/181801/
+
+night.mp3: "Crickets" by hopperphil
+https://freesound.org/people/hopperphil/sounds/685411/
+
+All three source pages declare Creative Commons Zero (CC0 1.0), verified
+2026-11-24. Recordings are dedicated to the public domain. No endorsement
+by the recordists or Freesound is implied.
+License: https://creativecommons.org/publicdomain/zero/1.0/
+Legal text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Edits by RillBuddy: excerpts, rumble/high-frequency filtering, a four-second
+circular crossfade, level matching and MP3 encoding. No synthetic noise or
+tones were added. See sources.json for edit parameters and file hashes;
+tools/prepare_ambience.py reproduces the processing from the source recordings.

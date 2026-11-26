@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Rill</title>
+    <style>
+      /* Colours come from the pet's skin (src/skin.ts); these are 紫梦's, until the skin is on. */
+      :root { --accent: #7a5fc0; --accent-deep: #6a50b0; --accent-soft: #ece4ff; --accent-text: #5b4696; --accent-off: #cfc3e6; --hover: #f5eefc; --room: #f3ecf9; --room-night: #ebe3f4; --room-line: #e3d8ea; --cushion: #e0d4ff; --stage: #e9eff8; --stage-ink: #5d6c85; --stage-line: #cfd9e8; --shade: 110, 88, 140; --motif-fill: #f3e9cf; --motif-line: #cdbdba; }
+      html:not([data-skin]) body { visibility: hidden; }
+      /* The same paper as the pet's bubble and its right-click menu. */
+      :root {
+        --ground: #faf6f0;
+        --paper: #fffaf2;
+        --ink: #5b4a57;
+        --ink-2: #6d5d6a;
+        --muted: #776775;
+        --line: #d9cbc8;
+        --rule: #efe6e2;
+        --well: #f0e9e4;
+        --alert: #c24e38;
+        --alert-ink: #b3432e;
+        --cc: #e0794f;
+        --cx: #2f9a8a;
+        --shadow: 0 14px 34px rgba(var(--shade), 0.26);
+        --ui: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+        --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; font-family: var(--ui); color: var(--ink); -webkit-font-smoothing: antialiased; }
+      button { font: inherit; color: inherit; cursor: pointer; }
+      #wrap { position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px 10px 12px; box-sizing: border-box; }
+      #wrap.top { justify-content: flex-start; }
+      .card { max-height: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 18px; background: var(--ground); border: 1px solid var(--line); border-radius: 26px;
+        box-shadow: var(--shadow); opacity: 0; transform: translateY(10px) scale(0.98); transform-origin: 50% 100%; transition: opacity 140ms var(--ease), transform 220ms var(--ease); }
+      #wrap.top .card { transform: translateY(-10px) scale(0.98); transform-origin: 50% 0; }
+      #wrap.open .card { opacity: 1; transform: none; }
+      @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+
+      /* who is here */
+      .pets { display: flex; gap: 10px; flex: none; }
+      .pet { flex: 1; min-width: 0; padding: 12px 10px 10px; border-radius: 22px; background: var(--room); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+      .pet canvas { width: 86px; height: 72px; display: block; }
+      .pet b { font-size: 13px; font-weight: 800; }
+      .pet .st { display: flex; align-items: center; gap: 5px; max-width: 100%; font-size: 12px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .pet .st i { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+      .pet.claude-code .st i { background: var(--cc); }
+      .pet.codex .st i { background: var(--cx); }
+      .pet.waiting .st { font-weight: 700; color: var(--alert-ink); }
+      .pet.waiting .st i { background: var(--alert); }
+      .nobody { flex: none; padding: 14px 16px; border-radius: 22px; background: var(--room); font-size: 13px; color: var(--ink-2); }
+      .agents { display: flex; flex-direction: column; gap: 5px; }
+      .agents-title { padding: 0 4px 2px; font-size: 12px; font-weight: 800; color: var(--muted); }
+      .agent-row { display: grid; grid-template-columns: 8px auto 1fr; align-items: center; gap: 7px; min-height: 30px; padding: 0 8px; border-radius: 10px; background: var(--paper); border: 1px solid var(--line); font-size: 12px; }
+      .agent-row .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+      .agent-row.waiting { color: var(--alert-ink); border-color: color-mix(in srgb, var(--alert) 34%, var(--line)); }
+      .agent-row.waiting .dot { background: var(--alert); }
+      .agent-row .agent-state { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .agent-row small { grid-column: 2 / 4; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      #rest { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; margin: 0 -6px; padding: 0 6px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+      #rest > * { flex: none; }
+
+      /* the switches people reach for */
+      .box { border-radius: 22px; background: var(--paper); border: 1px solid var(--line); padding: 4px 16px; display: flex; flex-direction: column; }
+      .sw-row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 0; box-sizing: border-box; border: 0; border-bottom: 1px solid var(--rule); background: transparent; text-align: left; width: 100%; }
+      .sw-row:last-child { border-bottom: 0; }
+      .sw-row .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+      .sw-row .tx b { font-size: 14px; font-weight: 700; }
+      .sw-row .tx small { font-size: 12px; color: var(--muted); line-height: 1.4; text-wrap: balance; }
+      .sw { flex: none; width: 46px; height: 28px; border-radius: 999px; background: var(--line); position: relative; transition: background 160ms; }
+      .sw::after { content: ""; position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--paper); transition: transform 200ms var(--ease); }
+      .sw.on { background: var(--accent); }
+      .sw.on::after { transform: translateX(18px); }
+      .sw-row:focus-visible .sw { box-shadow: 0 0 0 3px var(--accent-soft); }
+      .sw-row:focus-visible { outline: none; }
+
+      /* size */
+      .line { display: flex; align-items: center; gap: 12px; padding: 0 4px; }
+      .line > span { font-size: 13px; font-weight: 700; width: 48px; flex: none; }
+      .seg { flex: 1; display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--well); }
+      .seg button { flex: 1; min-height: 36px; border: 0; border-radius: 999px; background: transparent; font-size: 13px; font-weight: 700; color: var(--ink-2); white-space: nowrap; padding: 0 8px; }
+      .seg button.on { background: var(--paper); box-shadow: 0 1px 4px rgba(var(--shade), 0.2); font-weight: 800; color: var(--ink); }
+
+      /* everything else, folded away */
+      .row { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; min-height: 40px; padding: 0 10px; border: 0; border-radius: 12px; background: transparent; text-align: left; font-size: 14px; font-weight: 700; }
+      .row:hover:not(.static) { background: var(--hover); }
+      .row.static { cursor: default; }
+      .row .tx { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .row .hint { flex: none; max-width: 52%; font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .row .hint.ok { color: var(--accent); font-weight: 700; }
+      .row .sw { transform: scale(0.82); transform-origin: 100% 50%; }
+      .row .seg { flex: none; padding: 3px; }
+      .row .seg button { min-height: 28px; font-size: 12px; padding: 0 10px; }
+      .chips { display: flex; gap: 6px; flex: none; }
+      .chips button { min-height: 28px; padding: 0 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); font-size: 12px; font-weight: 700; color: var(--ink-2); }
+      .chips button:hover { background: var(--accent-soft); border-color: var(--accent-soft); }
+      .ver { padding: 2px 4px 0; font-size: 12px; color: var(--muted); }
+
+      /* the rest lives in the room */
+      .acts { display: flex; gap: 8px; flex: none; }
+      .acts button { flex: 1; min-height: 44px; border-radius: 999px; font-size: 14px; font-weight: 700; }
+      .acts .go { border: 0; background: var(--accent); color: #fff; }
+      .acts .go:hover { background: var(--accent-deep); }
+      .acts .alt { border: 1.5px solid var(--line); background: var(--paper); }
+      .acts .alt:hover { background: var(--hover); }
+      .quit { flex: none; min-height: 40px; margin: -4px 0 -8px; border: 0; background: transparent; font-size: 13px; font-weight: 700; color: var(--ink-2); border-radius: 999px; }
+      .quit:hover { background: var(--well); }
+    </style>
+  </head>
+  <body>
+    <div id="wrap">
+      <div class="card" id="card">
+        <div class="pets" id="pets"></div>
+        <div class="agents" id="agents"></div>
+        <div id="rest"></div>
+        <div class="acts" id="acts"></div>
+        <button class="quit" id="quit" data-go="quit"></button>
+      </div>
+    </div>
+    <script type="module" src="/src/tray.ts"></script>
+  </body>
+</html>

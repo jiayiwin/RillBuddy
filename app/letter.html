@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Letter · Rill</title>
+    <style>
+      /* Colours come from the pet's skin (src/skin.ts); these are 紫梦's, until the skin is on. */
+      :root { --accent: #7a5fc0; --accent-deep: #6a50b0; --accent-soft: #ece4ff; --accent-text: #5b4696; --accent-off: #cfc3e6; --hover: #f5eefc; --room: #f3ecf9; --room-night: #ebe3f4; --room-line: #e3d8ea; --cushion: #e0d4ff; --stage: #e9eff8; --stage-ink: #5d6c85; --stage-line: #cfd9e8; --shade: 110, 88, 140; --motif-fill: #f3e9cf; --motif-line: #cdbdba; }
+      html:not([data-skin]) body { visibility: hidden; }
+      /* A letter from the pet: a lilac folder, one sheet of its paper, the words
+         in a written face. Only the letter uses that face; it is the pet's own
+         writing, not the interface speaking. Fonts are the system's (offline). */
+      :root {
+        --ground: #f3ecf9;
+        --paper: #fffaf2;
+        --ink: #5b4a57;
+        --ink-2: #6d5d6a;
+        --muted: #776775;
+        --line: #d9cbc8;
+        --rule: #efe6e2;
+        --star: #f3e9cf;
+        --ui: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+        --hand: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "KaiTi", "STKaiti", "楷体", Georgia, serif;
+        --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+      body { padding: 8px; font-family: var(--ui); color: var(--ink); -webkit-font-smoothing: antialiased; user-select: none; }
+      button { font: inherit; color: inherit; cursor: pointer; }
+      /* As a tab: the same folder, in the middle of the page. */
+      html[data-embedded] body { display: grid; place-items: center; padding: 0; background: var(--ground); }
+      html[data-embedded] .folder { width: 420px; height: 600px; }
+      .folder { position: relative; width: 100%; height: 100%; padding: 22px; border-radius: 26px; background: var(--ground); border: 1px solid var(--room-line);
+        box-shadow: 0 3px 8px rgba(var(--shade), 0.28); display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+
+      /* ── the envelope it arrives in ── */
+      #envelope { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 22px;
+        background: var(--ground); border: 0; transition: opacity 0.45s var(--ease), transform 0.6s var(--ease); }
+      #envelope.away { opacity: 0; transform: translateY(40px) scale(0.97); pointer-events: none; }
+      .env-from { text-align: center; }
+      .env-from b { display: block; font-size: 22px; font-weight: 800; }
+      .env-from small { display: block; margin-top: 4px; font-size: 13px; color: var(--muted); }
+      .env { position: relative; width: 268px; height: 178px; border-radius: 18px; background: var(--paper); border: 1px solid var(--line); box-shadow: 0 10px 26px rgba(var(--shade), 0.2); perspective: 600px; }
+      .env::before { content: ""; position: absolute; inset: 0; border-radius: 18px; background:
+        linear-gradient(to top right, transparent calc(50% - 0.6px), var(--line) calc(50% - 0.6px), var(--line) calc(50% + 0.6px), transparent calc(50% + 0.6px)) left bottom / 50% 46% no-repeat,
+        linear-gradient(to top left, transparent calc(50% - 0.6px), var(--line) calc(50% - 0.6px), var(--line) calc(50% + 0.6px), transparent calc(50% + 0.6px)) right bottom / 50% 46% no-repeat; }
+      .env-flap { position: absolute; left: -1px; right: -1px; top: -1px; height: 104px; transform-origin: top center; transition: transform 0.7s var(--ease), opacity 0.4s 0.3s;
+        background: #f7efe6; clip-path: polygon(0 0, 100% 0, 50% 100%); filter: drop-shadow(0 2px 0 var(--line)); border-radius: 18px 18px 0 0; }
+      .env-flap.open { transform: rotateX(-170deg); opacity: 0; }
+      .env-seal { position: absolute; left: 50%; top: 74px; width: 56px; height: 56px; margin-left: -28px; border: 0; border-radius: 50%; background: var(--accent);
+        display: grid; place-items: center; box-shadow: 0 6px 16px rgba(122, 95, 192, 0.4); transition: transform 0.45s var(--ease), opacity 0.35s; animation: breathe 2.8s ease-in-out infinite; }
+      .env-seal:hover { background: var(--accent-deep); }
+      .env-seal:disabled { background: var(--accent-off); box-shadow: none; animation: none; cursor: default; }
+      .env-seal.off { transform: translateY(-22px) scale(0.7); opacity: 0; animation: none; }
+      @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+      .env-hint { margin: 0; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+
+      /* ── the sheet ── */
+      .sheet { position: relative; flex: 1; min-height: 0; padding: 30px 30px 24px; border-radius: 22px; background: var(--paper); border: 1px solid var(--line);
+        box-shadow: 0 10px 26px rgba(var(--shade), 0.2); display: flex; flex-direction: column; gap: 18px; opacity: 0; transform: translateY(26px); }
+      .sheet.visible { animation: rise 0.7s var(--ease) 0.3s both; }
+      @keyframes rise { to { opacity: 1; transform: none; } }
+      .date { flex: none; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+      #letter-text { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; font: 16px/2 var(--hand); cursor: pointer; user-select: text;
+        scrollbar-width: none; }
+      #letter-text::-webkit-scrollbar { display: none; }
+      #letter-text p { margin: 0; white-space: pre-wrap; word-break: break-word; }
+      #letter-text .cursor { display: inline-block; width: 2px; height: 1em; margin-left: 1px; vertical-align: -0.15em; background: var(--accent); animation: blink 0.8s steps(2) infinite; }
+      @keyframes blink { to { opacity: 0; } }
+      .foot { flex: none; display: flex; align-items: flex-end; gap: 12px; opacity: 0; transition: opacity 0.6s; }
+      .foot.show { opacity: 1; }
+      .foot .ps { flex: 1; min-width: 0; font: 13px/1.8 var(--hand); color: var(--muted); white-space: pre-wrap; }
+      .foot .sig { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+      .foot canvas { display: block; width: 74px; height: 70px; }
+      .foot b { font: 600 14px/1.4 var(--hand); }
+
+      /* ── earlier letters ── */
+      #past { position: absolute; inset: 0; z-index: 2; display: none; flex-direction: column; gap: 10px; padding: 26px 22px 18px; border-radius: 22px; background: var(--paper); }
+      #past.open { display: flex; }
+      #past h2 { margin: 0 8px 4px; font-size: 13px; font-weight: 800; color: var(--muted); }
+      #past .list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+      #past button { display: flex; flex-direction: column; gap: 2px; min-height: 56px; padding: 8px 10px; border: 0; border-bottom: 1px solid var(--rule); background: transparent; text-align: left; border-radius: 12px; }
+      #past button:hover { background: var(--hover); }
+      #past button b { font-size: 13px; font-weight: 800; }
+      #past button span { font: 13px/1.6 var(--hand); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      #past .none { padding: 8px; font-size: 14px; color: var(--muted); }
+
+      .acts { flex: none; display: flex; gap: 8px; }
+      .acts button { flex: 1; min-height: 44px; border-radius: 999px; font-size: 14px; font-weight: 700; }
+      .acts .go { border: 0; background: var(--accent); color: #fff; }
+      .acts .go:hover { background: var(--accent-deep); }
+      .acts .alt { border: 1.5px solid var(--line); background: var(--paper); }
+      .acts .alt:hover, .acts .alt[aria-pressed="true"] { background: var(--hover); }
+      @media (prefers-reduced-motion: reduce) { .env-seal { animation: none; } .sheet.visible { animation-duration: 0.01s; animation-delay: 0s; } }
+    </style>
+  </head>
+  <body>
+    <div class="folder" id="card" data-tauri-drag-region>
+      <!-- envelope -->
+      <div id="envelope" data-tauri-drag-region>
+        <div class="env-from"><b id="pet-name-label"></b><small id="env-sub"></small></div>
+        <div class="env">
+          <div class="env-flap" id="env-flap"></div>
+          <button class="env-seal" id="env-seal" type="button">
+            <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="var(--motif-fill)" stroke="var(--motif-fill)" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"><path data-motif d=""/></svg>
+          </button>
+        </div>
+        <p class="env-hint" id="env-hint"></p>
+      </div>
+      <!-- letter -->
+      <div class="sheet" id="letter">
+        <div class="date">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="var(--motif-fill)" stroke="var(--motif-line)" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><path data-motif d=""/></svg>
+          <span id="letter-date"></span>
+        </div>
+        <div id="letter-text"></div>
+        <div class="foot" id="letter-foot">
+          <span class="ps" id="letter-ps"></span>
+          <div class="sig"><canvas id="sig-pet"></canvas><b id="letter-from"></b></div>
+        </div>
+        <div id="past"><h2 id="past-title"></h2><div class="list" id="past-list"></div></div>
+      </div>
+      <div class="acts">
+        <button type="button" class="go" id="close-btn"></button>
+        <button type="button" class="alt" id="past-btn" aria-pressed="false"></button>
+      </div>
+    </div>
+    <script src="/embed.js"></script>
+    <script type="module" src="/src/letter.ts"></script>
+  </body>
+</html>
